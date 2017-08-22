@@ -142,8 +142,7 @@ describe('Model: availableDrives', function () {
 
         describe('given no selected image and no selected drive', function () {
           beforeEach(function () {
-            selectionState.removeDrive()
-            selectionState.removeImage()
+            selectionState.clear()
           })
 
           it('should auto-select a single valid available drive', function () {
@@ -163,7 +162,7 @@ describe('Model: availableDrives', function () {
             ])
 
             m.chai.expect(selectionState.hasDrive()).to.be.true
-            m.chai.expect(selectionState.getDrive().device).to.equal('/dev/sdb')
+            m.chai.expect(selectionState.getCurrentDrive().device).to.equal('/dev/sdb')
           })
         })
 
@@ -175,7 +174,7 @@ describe('Model: availableDrives', function () {
               this.imagePath = '/mnt/bar/foo.img'
             }
 
-            selectionState.removeDrive()
+            selectionState.clear()
             selectionState.setImage({
               path: this.imagePath,
               extension: 'img',
@@ -239,7 +238,7 @@ describe('Model: availableDrives', function () {
               }
             ])
 
-            m.chai.expect(selectionState.getDrive()).to.deep.equal({
+            m.chai.expect(selectionState.getCurrentDrive()).to.deep.equal({
               device: '/dev/sdb',
               name: 'Foo',
               size: 2000000000,
@@ -394,11 +393,11 @@ describe('Model: availableDrives', function () {
             }
           ])
 
-          selectionState.setDrive('/dev/sdc')
+          selectionState.addDrive('/dev/sdc')
         })
 
         afterEach(function () {
-          selectionState.removeDrive()
+          selectionState.clear()
         })
 
         it('should be deleted if its not contained in the available drives anymore', function () {
