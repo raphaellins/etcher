@@ -2,6 +2,10 @@
 # Build configuration
 # ---------------------------------------------------------------------
 
+# A non-existing target to force rules to rebuild
+# See https://stackoverflow.com/a/816416
+.FORCE:
+
 # This directory will be completely deleted by the `clean` rule
 BUILD_DIRECTORY ?= dist
 
@@ -287,13 +291,16 @@ $(BUILD_DIRECTORY)/$(APPLICATION_NAME)-cli-$(APPLICATION_VERSION)-$(PLATFORM)-$(
 assets/dmg-installer.tiff: assets/dmg-installer.png assets/dmg-installer@2x.png
 	tiffutil -cathidpicheck $^ -out $@
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-$(APPLICATION_VERSION).dmg: assets/dmg-installer.tiff \
+build/js/gui.js: .FORCE
+	webpack
+
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-$(APPLICATION_VERSION).dmg: assets/dmg-installer.tiff build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	TARGET_ARCH=$(TARGET_ARCH) build --mac dmg $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.version=$(APPLICATION_VERSION) \
 		--extraMetadata.packageType=dmg
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-$(APPLICATION_VERSION)-mac.zip: assets/dmg-installer.tiff \
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-$(APPLICATION_VERSION)-mac.zip: assets/dmg-installer.tiff build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	TARGET_ARCH=$(TARGET_ARCH) build --mac zip $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.version=$(APPLICATION_VERSION) \
@@ -301,7 +308,7 @@ $(BUILD_DIRECTORY)/$(APPLICATION_NAME)-$(APPLICATION_VERSION)-mac.zip: assets/dm
 
 APPLICATION_NAME_ELECTRON = $(APPLICATION_NAME_LOWERCASE)-electron
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME_ELECTRON)-$(APPLICATION_VERSION_REDHAT).$(TARGET_ARCH_REDHAT).rpm: \
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME_ELECTRON)-$(APPLICATION_VERSION_REDHAT).$(TARGET_ARCH_REDHAT).rpm: build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	build --linux rpm $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.name=$(APPLICATION_NAME_ELECTRON) \
@@ -309,7 +316,7 @@ $(BUILD_DIRECTORY)/$(APPLICATION_NAME_ELECTRON)-$(APPLICATION_VERSION_REDHAT).$(
 		--extraMetadata.packageType=rpm \
 		$(DISABLE_UPDATES_ELECTRON_BUILDER_OPTIONS)
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME_ELECTRON)_$(APPLICATION_VERSION_DEBIAN)_$(TARGET_ARCH_DEBIAN).deb: \
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME_ELECTRON)_$(APPLICATION_VERSION_DEBIAN)_$(TARGET_ARCH_DEBIAN).deb: build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	build --linux deb $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.name=$(APPLICATION_NAME_ELECTRON) \
@@ -323,7 +330,7 @@ else
 ELECTRON_BUILDER_LINUX_UNPACKED_DIRECTORY = linux-$(TARGET_ARCH_ELECTRON_BUILDER)-unpacked
 endif
 
-$(BUILD_DIRECTORY)/$(ELECTRON_BUILDER_LINUX_UNPACKED_DIRECTORY)/$(APPLICATION_NAME_ELECTRON): | $(BUILD_DIRECTORY)
+$(BUILD_DIRECTORY)/$(ELECTRON_BUILDER_LINUX_UNPACKED_DIRECTORY)/$(APPLICATION_NAME_ELECTRON): build/js/gui.js | $(BUILD_DIRECTORY)
 	build --dir --linux $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.name=$(APPLICATION_NAME_ELECTRON) \
 		--extraMetadata.version=$(APPLICATION_VERSION) \
@@ -356,13 +363,13 @@ $(BUILD_DIRECTORY)/$(APPLICATION_NAME_LOWERCASE)-$(APPLICATION_VERSION)-$(PLATFO
 	| $(BUILD_DIRECTORY)
 	./scripts/build/zip-file.sh -f $< -s $(PLATFORM) -o $@
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-Portable-$(APPLICATION_VERSION)-$(TARGET_ARCH).exe: \
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-Portable-$(APPLICATION_VERSION)-$(TARGET_ARCH).exe: build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	TARGET_ARCH=$(TARGET_ARCH) build --win portable $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.version=$(APPLICATION_VERSION) \
 		--extraMetadata.packageType=portable
 
-$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-Setup-$(APPLICATION_VERSION)-$(TARGET_ARCH).exe: \
+$(BUILD_DIRECTORY)/$(APPLICATION_NAME)-Setup-$(APPLICATION_VERSION)-$(TARGET_ARCH).exe: build/js/gui.js \
 	| $(BUILD_DIRECTORY)
 	TARGET_ARCH=$(TARGET_ARCH) build --win nsis $(ELECTRON_BUILDER_OPTIONS) \
 		--extraMetadata.version=$(APPLICATION_VERSION) \
@@ -389,6 +396,7 @@ TARGETS = \
 	clean \
 	distclean \
 	changelog \
+	webpack \
 	package-electron \
 	package-cli \
 	cli-develop \
@@ -398,6 +406,8 @@ TARGETS = \
 
 changelog:
 	versionist
+
+webpack: build/js/gui.js
 
 package-electron:
 	TARGET_ARCH=$(TARGET_ARCH) build --dir $(ELECTRON_BUILDER_OPTIONS)
@@ -526,10 +536,10 @@ electron-develop:
 		-s "$(PLATFORM)"
 
 sass:
-	node-sass lib/gui/scss/main.scss > lib/gui/css/main.css
+	node-sass lib/gui/app/scss/main.scss > lib/gui/css/main.css
 
 lint-js:
-	eslint lib tests scripts bin versionist.conf.js
+	eslint lib tests scripts bin versionist.conf.js webpack.config.js
 
 lint-sass:
 	sass-lint lib/gui/scss

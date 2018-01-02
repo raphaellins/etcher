@@ -23,7 +23,7 @@ require('angular-mocks')
 
 describe('Browser: ImageWriter', function () {
   beforeEach(angular.mock.module(
-    require('../../../lib/gui/modules/image-writer')
+    require('../../../lib/gui/app/modules/image-writer')
   ))
 
   describe('ImageWriterService', function () {
