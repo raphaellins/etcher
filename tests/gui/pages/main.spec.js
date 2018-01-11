@@ -153,9 +153,6 @@ describe('Browser: MainPage', function () {
           }
         })
 
-        console.log(`hasDrive: ${selectionState.hasDrive()}`)
-        console.log(`hasImage: ${selectionState.hasImage()}`)
-
         m.chai.expect(controller.shouldFlashStepBeDisabled()).to.be.false
       })
     })

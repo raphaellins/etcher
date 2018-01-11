@@ -194,8 +194,6 @@ describe('Model: selectionState', function () {
       selectionState.toggleDrive(this.drives[0].device)
       selectionState.toggleDrive(this.drives[0].device)
       m.chai.expect(selectionState.getCurrentDrive()).to.deep.equal(this.drives[1])
-      selectionState.toggleDrive(this.drives[1].device)
-      m.chai.expect(selectionState.getCurrentDrive()).to.deep.equal(this.drives[0])
     })
 
     it('should keep system drives selected', function () {
@@ -218,9 +216,14 @@ describe('Model: selectionState', function () {
     it('should be able to remove a drive', function () {
       m.chai.expect(selectionState.getSelectedDevices().length).to.equal(2)
       selectionState.toggleDrive(this.drives[0].device)
-      m.chai.expect(selectionState.hasDrive()).to.be.true
-      m.chai.expect(selectionState.getSelectedDevices().length).to.equal(1)
       m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal([ this.drives[1].device ])
+    })
+
+    describe('.removeAllDrives()', function () {
+      it('should remove all drives', function () {
+        selectionState.removeAllDrives()
+        m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal([])
+      })
     })
   })
 
