@@ -175,7 +175,7 @@ describe('Model: availableDrives', function () {
             }
 
             selectionState.clear()
-            selectionState.setImage({
+            selectionState.selectImage({
               path: this.imagePath,
               extension: 'img',
               size: {
@@ -190,7 +190,7 @@ describe('Model: availableDrives', function () {
           })
 
           afterEach(function () {
-            selectionState.removeImage()
+            selectionState.unselectImage()
           })
 
           it('should not auto-select when there are multiple valid available drives', function () {
@@ -393,7 +393,7 @@ describe('Model: availableDrives', function () {
             }
           ])
 
-          selectionState.addDrive('/dev/sdc')
+          selectionState.selectDrive('/dev/sdc')
         })
 
         afterEach(function () {

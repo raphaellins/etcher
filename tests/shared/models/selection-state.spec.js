@@ -93,7 +93,7 @@ describe('Model: selectionState', function () {
         }
       ])
 
-      selectionState.addDrive('/dev/disk2')
+      selectionState.selectDrive('/dev/disk2')
     })
 
     describe('.getCurrentDrive()', function () {
@@ -115,9 +115,9 @@ describe('Model: selectionState', function () {
       })
     })
 
-    describe('.addDrive()', function () {
+    describe('.selectDrive()', function () {
       it('should queue the drive', function () {
-        selectionState.addDrive('/dev/disk5')
+        selectionState.selectDrive('/dev/disk5')
         const drives = selectionState.getSelectedDevices()
         const lastDriveDevice = _.last(drives)
         const lastDrive = availableDrives.findDriveByDevice(lastDriveDevice)
@@ -130,12 +130,12 @@ describe('Model: selectionState', function () {
       })
     })
 
-    describe('.removeDrive()', function () {
+    describe('.unselectDrive()', function () {
       it('should clear drives', function () {
         const firstDrive = selectionState.getCurrentDrive()
-        selectionState.removeDrive(firstDrive.device)
+        selectionState.unselectDrive(firstDrive.device)
         const secondDrive = selectionState.getCurrentDrive()
-        selectionState.removeDrive(secondDrive.device)
+        selectionState.unselectDrive(secondDrive.device)
         const drive = selectionState.getCurrentDrive()
         m.chai.expect(drive).to.be.undefined
       })
@@ -152,26 +152,26 @@ describe('Model: selectionState', function () {
           mountpoint: '/media/UNTITLED',
           name: '/dev/sdb',
           system: false,
-          protected: false
+          isReadonly: false
         },
         {
           device: '/dev/disk2',
           name: 'USB Drive 2',
           size: 999999999,
-          protected: false
+          isReadonly: false
         },
         {
           device: '/dev/disk3',
           name: 'USB Drive 3',
           size: 999999999,
-          protected: false
+          isReadonly: false
         }
       ]
 
       availableDrives.setDrives(this.drives)
 
-      selectionState.addDrive(this.drives[0].device)
-      selectionState.addDrive(this.drives[1].device)
+      selectionState.selectDrive(this.drives[0].device)
+      selectionState.selectDrive(this.drives[1].device)
     })
 
     afterEach(function () {
@@ -180,12 +180,12 @@ describe('Model: selectionState', function () {
     })
 
     it('should be able to add more drives', function () {
-      selectionState.addDrive(this.drives[2].device)
+      selectionState.selectDrive(this.drives[2].device)
       m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal(_.map(this.drives, 'device'))
     })
 
     it('should be able to remove drives', function () {
-      selectionState.removeDrive(this.drives[1].device)
+      selectionState.unselectDrive(this.drives[1].device)
       m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal([ this.drives[0].device ])
     })
 
@@ -201,14 +201,14 @@ describe('Model: selectionState', function () {
         device: '/dev/disk0',
         name: 'USB Drive 0',
         size: 999999999,
-        protected: false,
+        isReadonly: false,
         system: true
       }
 
       const newDrives = [ ..._.initial(this.drives), systemDrive ]
       availableDrives.setDrives(newDrives)
 
-      selectionState.addDrive(systemDrive.device)
+      selectionState.selectDrive(systemDrive.device)
       availableDrives.setDrives(newDrives)
       m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal(_.map(newDrives, 'device'))
     })
@@ -219,16 +219,16 @@ describe('Model: selectionState', function () {
       m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal([ this.drives[1].device ])
     })
 
-    describe('.removeAllDrives()', function () {
+    describe('.unselectAllDrives()', function () {
       it('should remove all drives', function () {
-        selectionState.removeAllDrives()
+        selectionState.unselectAllDrives()
         m.chai.expect(selectionState.getSelectedDevices()).to.deep.equal([])
       })
     })
   })
 
   describe('given no drive', function () {
-    describe('.addDrive()', function () {
+    describe('.selectDrive()', function () {
       it('should be able to set a drive', function () {
         availableDrives.setDrives([
           {
@@ -239,7 +239,7 @@ describe('Model: selectionState', function () {
           }
         ])
 
-        selectionState.addDrive('/dev/disk5')
+        selectionState.selectDrive('/dev/disk5')
         const drive = selectionState.getCurrentDrive()
         m.chai.expect(drive).to.deep.equal({
           device: '/dev/disk5',
@@ -249,7 +249,7 @@ describe('Model: selectionState', function () {
         })
       })
 
-      it('should throw if drive is write protected', function () {
+      it('should throw if drive is read-only', function () {
         availableDrives.setDrives([
           {
             device: '/dev/disk1',
@@ -260,7 +260,7 @@ describe('Model: selectionState', function () {
         ])
 
         m.chai.expect(function () {
-          selectionState.addDrive('/dev/disk1')
+          selectionState.selectDrive('/dev/disk1')
         }).to.throw('The drive is write-protected')
       })
 
@@ -275,13 +275,13 @@ describe('Model: selectionState', function () {
         ])
 
         m.chai.expect(function () {
-          selectionState.addDrive('/dev/disk5')
+          selectionState.selectDrive('/dev/disk5')
         }).to.throw('The drive is not available: /dev/disk5')
       })
 
       it('should throw if device is not a string', function () {
         m.chai.expect(function () {
-          selectionState.addDrive(123)
+          selectionState.selectDrive(123)
         }).to.throw('Invalid drive: 123')
       })
     })
@@ -306,10 +306,10 @@ describe('Model: selectionState', function () {
         logo: '<svg><text fill="red">Raspbian</text></svg>'
       }
 
-      selectionState.setImage(this.image)
+      selectionState.selectImage(this.image)
     })
 
-    describe('.addDrive()', function () {
+    describe('.selectDrive()', function () {
       it('should throw if drive is not large enough', function () {
         availableDrives.setDrives([
           {
@@ -321,7 +321,7 @@ describe('Model: selectionState', function () {
         ])
 
         m.chai.expect(function () {
-          selectionState.addDrive('/dev/disk2')
+          selectionState.selectDrive('/dev/disk2')
         }).to.throw('The drive is not large enough')
       })
     })
@@ -388,9 +388,9 @@ describe('Model: selectionState', function () {
       })
     })
 
-    describe('.setImage()', function () {
+    describe('.selectImage()', function () {
       it('should override the image', function () {
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'bar.img',
           extension: 'img',
           size: {
@@ -409,9 +409,9 @@ describe('Model: selectionState', function () {
       })
     })
 
-    describe('.removeImage()', function () {
+    describe('.unselectImage()', function () {
       it('should clear the image', function () {
-        selectionState.removeImage()
+        selectionState.unselectImage()
 
         const imagePath = selectionState.getImagePath()
         m.chai.expect(imagePath).to.be.undefined
@@ -422,9 +422,11 @@ describe('Model: selectionState', function () {
   })
 
   describe('given no image', function () {
-    describe('.setImage()', function () {
+    describe('.selectImage()', function () {
+      afterEach(selectionState.clear)
+
       it('should be able to set an image', function () {
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'foo.img',
           extension: 'img',
           size: {
@@ -443,7 +445,7 @@ describe('Model: selectionState', function () {
       })
 
       it('should be able to set an image with an archive extension', function () {
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'foo.zip',
           extension: 'img',
           archiveExtension: 'zip',
@@ -461,7 +463,7 @@ describe('Model: selectionState', function () {
       })
 
       it('should infer a compressed raw image if the penultimate extension is missing', function () {
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'foo.xz',
           extension: 'img',
           archiveExtension: 'xz',
@@ -479,7 +481,7 @@ describe('Model: selectionState', function () {
       })
 
       it('should infer a compressed raw image if the penultimate extension is not a file extension', function () {
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'something.linux-x86-64.gz',
           extension: 'img',
           archiveExtension: 'gz',
@@ -498,7 +500,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if no path', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             extension: 'img',
             size: {
               original: 999999999,
@@ -513,7 +515,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if path is not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 123,
             extension: 'img',
             size: {
@@ -529,7 +531,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if no extension', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             size: {
               original: 999999999,
@@ -544,7 +546,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if extension is not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 1,
             size: {
@@ -560,7 +562,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the extension doesn\'t match the path and there is no archive extension', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'iso',
             size: {
@@ -576,7 +578,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the extension doesn\'t match the path and the archive extension is not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'iso',
             archiveExtension: 1,
@@ -593,7 +595,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the archive extension doesn\'t match the last path extension in a compressed image', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img.xz',
             extension: 'img',
             archiveExtension: 'gz',
@@ -610,7 +612,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the extension is not recognised in an uncompressed image', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.ifg',
             extension: 'ifg',
             size: {
@@ -626,7 +628,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the extension is not recognised in a compressed image', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.ifg.gz',
             extension: 'ifg',
             archiveExtension: 'gz',
@@ -643,7 +645,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the archive extension is not recognised', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img.ifg',
             extension: 'img',
             archiveExtension: 'ifg',
@@ -660,7 +662,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if no size', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img'
           })
@@ -669,7 +671,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if size is not a plain object', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: 999999999
@@ -679,7 +681,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the original size is not a number', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -695,7 +697,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the original size is a float number', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -711,7 +713,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the original size is negative', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -727,7 +729,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the final size is not a number', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -743,7 +745,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the final size is a float number', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -759,7 +761,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the final size is negative', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -775,7 +777,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if the final size estimation flag is not a boolean', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -791,7 +793,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if url is defined but it\'s not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -808,7 +810,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if name is defined but it\'s not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -825,7 +827,7 @@ describe('Model: selectionState', function () {
 
       it('should throw if logo is defined but it\'s not a string', function () {
         m.chai.expect(function () {
-          selectionState.setImage({
+          selectionState.selectImage({
             path: 'foo.img',
             extension: 'img',
             size: {
@@ -845,31 +847,30 @@ describe('Model: selectionState', function () {
           {
             device: '/dev/disk1',
             name: 'USB Drive',
-            size: 999999999,
+            size: 123456789,
             isReadonly: false
           }
         ])
 
-        selectionState.addDrive('/dev/disk1')
+        selectionState.selectDrive('/dev/disk1')
         m.chai.expect(selectionState.hasDrive()).to.be.true
 
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'foo.img',
           extension: 'img',
           size: {
-            original: 9999999999,
+            original: 1234567890,
             final: {
               estimation: false,
-              value: 9999999999
+              value: 1234567890
             }
           }
         })
 
         m.chai.expect(selectionState.hasDrive()).to.be.false
-        selectionState.removeImage()
       })
 
-      it('should not de-select a previously selected not-recommended drive', function () {
+      it('should de-select a previously selected not-recommended drive', function () {
         availableDrives.setDrives([
           {
             device: '/dev/disk1',
@@ -879,10 +880,10 @@ describe('Model: selectionState', function () {
           }
         ])
 
-        selectionState.addDrive('/dev/disk1')
+        selectionState.selectDrive('/dev/disk1')
         m.chai.expect(selectionState.hasDrive()).to.be.true
 
-        selectionState.setImage({
+        selectionState.selectImage({
           path: 'foo.img',
           extension: 'img',
           size: {
@@ -895,8 +896,7 @@ describe('Model: selectionState', function () {
           recommendedDriveSize: 1500000000
         })
 
-        m.chai.expect(selectionState.hasDrive()).to.be.true
-        selectionState.removeImage()
+        m.chai.expect(selectionState.hasDrive()).to.be.false
       })
 
       it('should de-select a previously selected source drive', function () {
@@ -922,10 +922,10 @@ describe('Model: selectionState', function () {
           }
         ])
 
-        selectionState.addDrive('/dev/disk1')
+        selectionState.selectDrive('/dev/disk1')
         m.chai.expect(selectionState.hasDrive()).to.be.true
 
-        selectionState.setImage({
+        selectionState.selectImage({
           path: imagePath,
           extension: 'img',
           size: {
@@ -938,7 +938,6 @@ describe('Model: selectionState', function () {
         })
 
         m.chai.expect(selectionState.hasDrive()).to.be.false
-        selectionState.removeImage()
       })
     })
   })
@@ -954,9 +953,9 @@ describe('Model: selectionState', function () {
         }
       ])
 
-      selectionState.addDrive('/dev/disk1')
+      selectionState.selectDrive('/dev/disk1')
 
-      selectionState.setImage({
+      selectionState.selectImage({
         path: 'foo.img',
         extension: 'img',
         size: {
@@ -981,11 +980,45 @@ describe('Model: selectionState', function () {
       })
     })
 
-    describe('given the preserveImage option', function () {
+    describe('.unselectImage()', function () {
       beforeEach(function () {
-        selectionState.clear({
-          preserveImage: true
+        selectionState.unselectImage()
+      })
+
+      it('getCurrentDrive() should return the selected drive object', function () {
+        const drive = selectionState.getCurrentDrive()
+        m.chai.expect(drive).to.deep.equal({
+          device: '/dev/disk1',
+          isReadonly: false,
+          name: 'USB Drive',
+          size: 999999999
         })
+      })
+
+      it('getImagePath() should return undefined', function () {
+        const imagePath = selectionState.getImagePath()
+        m.chai.expect(imagePath).to.be.undefined
+      })
+
+      it('getImageSize() should return undefined', function () {
+        const imageSize = selectionState.getImageSize()
+        m.chai.expect(imageSize).to.be.undefined
+      })
+
+      it('hasDrive() should return true', function () {
+        const hasDrive = selectionState.hasDrive()
+        m.chai.expect(hasDrive).to.be.true
+      })
+
+      it('hasImage() should return false', function () {
+        const hasImage = selectionState.hasImage()
+        m.chai.expect(hasImage).to.be.false
+      })
+    })
+
+    describe('.unselectAllDrives()', function () {
+      beforeEach(function () {
+        selectionState.unselectAllDrives()
       })
 
       it('getCurrentDrive() should return undefined', function () {
@@ -1022,27 +1055,27 @@ describe('Model: selectionState', function () {
           device: '/dev/disk1',
           name: 'USB Drive 1',
           size: 999999999,
-          protected: false
+          isReadonly: false
         },
         {
           device: '/dev/disk2',
           name: 'USB Drive 2',
           size: 999999999,
-          protected: false
+          isReadonly: false
         },
         {
           device: '/dev/disk3',
           name: 'USB Drive 3',
           size: 999999999,
-          protected: false
+          isReadonly: false
         }
       ])
 
-      selectionState.addDrive('/dev/disk1')
-      selectionState.addDrive('/dev/disk2')
-      selectionState.addDrive('/dev/disk3')
+      selectionState.selectDrive('/dev/disk1')
+      selectionState.selectDrive('/dev/disk2')
+      selectionState.selectDrive('/dev/disk3')
 
-      selectionState.setImage({
+      selectionState.selectImage({
         path: 'foo.img',
         extension: 'img',
         size: {
@@ -1066,39 +1099,6 @@ describe('Model: selectionState', function () {
         m.chai.expect(selectionState.hasImage()).to.be.false
       })
     })
-
-    describe('given the preserveImage option', function () {
-      beforeEach(function () {
-        selectionState.clear({
-          preserveImage: true
-        })
-      })
-
-      it('getCurrentDrive() should return undefined', function () {
-        const drive = selectionState.getCurrentDrive()
-        m.chai.expect(drive).to.be.undefined
-      })
-
-      it('getImagePath() should return the image path', function () {
-        const imagePath = selectionState.getImagePath()
-        m.chai.expect(imagePath).to.equal('foo.img')
-      })
-
-      it('getImageSize() should return the image size', function () {
-        const imageSize = selectionState.getImageSize()
-        m.chai.expect(imageSize).to.equal(999999999)
-      })
-
-      it('hasDrive() should return false', function () {
-        const hasDrive = selectionState.hasDrive()
-        m.chai.expect(hasDrive).to.be.false
-      })
-
-      it('hasImage() should return true', function () {
-        const hasImage = selectionState.hasImage()
-        m.chai.expect(hasImage).to.be.true
-      })
-    })
   })
 
   describe('.isCurrentDrive()', function () {
@@ -1118,7 +1118,7 @@ describe('Model: selectionState', function () {
           }
         ])
 
-        selectionState.addDrive('/dev/sdb')
+        selectionState.selectDrive('/dev/sdb')
       })
 
       afterEach(function () {
@@ -1179,7 +1179,7 @@ describe('Model: selectionState', function () {
           }
         ])
 
-        selectionState.addDrive(this.drive.device)
+        selectionState.selectDrive(this.drive.device)
       })
 
       afterEach(function () {
@@ -1217,13 +1217,13 @@ describe('Model: selectionState', function () {
             device: '/dev/disk2',
             name: 'USB Drive 2',
             size: 999999999,
-            protected: false
+            isReadonly: false
           },
           {
             device: '/dev/disk3',
             name: 'USB Drive 3',
             size: 999999999,
-            protected: false
+            isReadonly: false
           }
         ])
       })
